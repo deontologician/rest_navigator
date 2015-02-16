@@ -241,7 +241,7 @@ class HALNavigatorBase(object):
 
     @property
     def fetched(self):
-        return self.response is not None
+        return self.state is not None
 
     def __repr__(self):  # pragma: nocover
         relative_uri = self.self.relative_uri(self._core.root)
@@ -425,7 +425,7 @@ class HALNavigator(HALNavigatorBase):
     '''The main navigation entity'''
 
     def __call__(self, raise_exc=True):
-        if self.response is None:
+        if not self.fetched:
             return self.fetch(raise_exc=raise_exc)
         else:
             return self.state.copy()
@@ -446,7 +446,9 @@ class HALNavigator(HALNavigatorBase):
                 core=self._core
             )
             # We don't ingest the response because we haven't fetched
-            # the newly created resource yet
+            # the newly created resource yet,
+            # but we do store the response
+            nav.response = response
         elif method in (POST, PUT, PATCH, DELETE):
             nav = OrphanHALNavigator(
                 link=None,
