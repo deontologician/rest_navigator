@@ -575,6 +575,7 @@ To run tests, execute following from the root of the source directory:
 
 ::
 
+    $ pip install -e .
     $ py.test
 
 Planned for the future
