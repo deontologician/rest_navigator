@@ -60,12 +60,22 @@ class APICore(object):
         self.session = session or requests.Session()
         self.id_map = id_map if id_map is not None else WeakValueDictionary()
 
+    @staticmethod
+    def _flatten_dict(link):
+        '''Flattens the link.props dictionary and adds the link.uri to it, for use as the cache key.'''
+        flattened_dict = ', '.join("%s=%r" % (key, val) for (key, val) in link.props.iteritems())
+        flattened_dict += link.uri
+        return flattened_dict
+
     def cache(self, link, nav):
         '''Stores a navigator in the identity map for the current
         api. Can take a link or a bare uri'''
         if link is None:
             return  # We don't cache navigators without a Link
         elif hasattr(link, 'uri'):
+            if hasattr(link, 'props'):
+                if link.props:
+                    self.id_map[self._flatten_dict(link)] = nav
             self.id_map[link.uri] = nav
         else:
             self.id_map[link] = nav
@@ -75,6 +85,9 @@ class APICore(object):
 
         Either a Link object or a bare uri string may be passed in.'''
         if hasattr(link, 'uri'):
+            if hasattr(link, 'props'):
+                if link.props:
+                    return self.id_map.get(self._flatten_dict(link), default)
             return self.id_map.get(link.uri, default)
         else:
             return self.id_map.get(link, default)
@@ -86,6 +99,9 @@ class APICore(object):
         if link is None:
             return False
         elif hasattr(link, 'uri'):
+            if hasattr(link, 'props'):
+                if link.props:
+                    return self._flatten_dict(link) in self.id_map
             return link.uri in self.id_map
         else:
             return link in self.id_map
